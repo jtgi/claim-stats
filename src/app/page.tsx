@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getExtension } from '@manifoldxyz/claim-contracts';
 
 import { createPublicClient, formatEther, getContract, http } from 'viem';
@@ -16,12 +16,23 @@ export default function Home() {
   const [claims, setClaims] = useState<Array<any>>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const ref = useRef<any>();
 
-  async function handleSubmit(form: HTMLFormElement) {
-    const data = new FormData(form);
-    const addressOrEns = data.get('addressOrEns') as string | null;
+  useEffect(() => {
+    const onKey = (e: any) => {
+      if (e.key === '/') {
+        e.preventDefault();
+        ref.current?.focus();
+        ref.current?.select();
+      }
+    };
 
-    if (!addressOrEns) {
+    window.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  async function handleSubmit(address: string) {
+    if (!address) {
       return;
     }
 
@@ -36,7 +47,7 @@ export default function Home() {
       do {
         const instanceResponse = await fetch(
           `https://apps.api.manifoldxyz.dev/public/instance/all?appId=2537426615&address=${encodeURIComponent(
-            addressOrEns.toLowerCase()
+            address.toLowerCase()
           )}&pageNumber=${page}&pageSize=1000&sort=asc`
         );
 
@@ -147,16 +158,27 @@ export default function Home() {
           className="flex items-center justify-center gap-x-2 w-full max-w-xl"
           onSubmit={(e) => {
             e.preventDefault();
-            handleSubmit(e.currentTarget);
+            const data = new FormData(e.currentTarget);
+            const addressOrEns = data.get('a') as string | null;
+
+            if (addressOrEns) {
+              handleSubmit(addressOrEns);
+            }
           }}
         >
           <input
-            name="addressOrEns"
+            ref={ref}
+            name="a"
             disabled={loading}
             placeholder="jtgi.eth"
             onKeyDown={(e: any) => {
               if (e.key === 'Enter') {
-                handleSubmit(e.form);
+                const data = new FormData(e.form);
+                const addressOrEns = data.get('a') as string | null;
+
+                if (addressOrEns) {
+                  handleSubmit(addressOrEns);
+                }
               }
             }}
             className="p-4 flex-auto border-2 border-gray-300 rounded-lg"
