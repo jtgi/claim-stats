@@ -9,17 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@manifoldxyz/claim-contracts": "^1.0.6",
+    "bufferutil": "^4.0.8",
+    "next": "13.5.6",
     "react": "^18",
     "react-dom": "^18",
-    "next": "13.5.6"
+    "utf-8-validate": "^6.0.3",
+    "viem": "^1.16.6"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10",
     "postcss": "^8",
-    "tailwindcss": "^3"
+    "tailwindcss": "^3",
+    "typescript": "^5"
   }
 }
