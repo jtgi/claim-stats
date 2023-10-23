@@ -5,6 +5,7 @@ import { getExtension } from '@manifoldxyz/claim-contracts';
 
 import { createPublicClient, formatEther, getContract, http } from 'viem';
 import { mainnet } from 'viem/chains';
+import { LoaderIcon, RocketIcon } from 'lucide-react';
 
 const client = createPublicClient({
   chain: mainnet,
@@ -16,10 +17,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const data = new FormData(event.currentTarget);
+  async function handleSubmit(form: HTMLFormElement) {
+    const data = new FormData(form);
     const addressOrEns = data.get('addressOrEns') as string | null;
 
     if (!addressOrEns) {
@@ -42,6 +41,7 @@ export default function Home() {
         );
 
         if (!instanceResponse.ok) {
+          setError('No claims found');
           break;
         }
 
@@ -86,92 +86,119 @@ export default function Home() {
 
   return (
     <main className="items-center justify-between p-2 sm:p-24 font-mono relative min-h-screen">
-      <form className="flex items-center justify-center gap-x-2" onSubmit={handleSubmit}>
-        <input
-          name="addressOrEns"
-          placeholder="jtgi.eth"
-          className="p-4 flex-auto border-2 border-gray-300 rounded-lg"
-        />
-        <button className="bg-zinc-700 text-white font-semibold p-4 text-center border-2 border-gray-300 rounded-lg">
-          Lookup
-        </button>
-      </form>
+      {error && (
+        <div className="border border-red-500 text-red-500 p-4 rounded-lg mt-4">{error}</div>
+      )}
 
-      {error && <div className="bg-red-500 text-white p-4 rounded-lg mt-4">{error}</div>}
-
-      <div className="space-y-4 divide-y md:divide-y-0 md:grid md:grid-cols-2 md:gap-x-4 lg:grid-cols-3">
-        {claims?.map((claim) => (
-          <a
-            className="flex items-center gap-x-4 py-2"
-            target="_blank"
-            key={claim.instance.id}
-            href={`https://app.manifold.xyz/c/${claim.instance.slug}`}
-          >
-            <div className="flex-shrink-0">
-              <img
-                src={claim.instance.publicData.image}
-                className="w-24 h-24 rounded-lg object-cover"
-              />
-            </div>
-            <div>
-              <h2 className="font-semibold">{claim.instance.publicData.name}</h2>
-              {claim.error ? (
-                <p className="text-red-500">{claim.error}</p>
-              ) : (
-                <div className="text-sm">
-                  <div className="flex items-center gap-x-2">
-                    <div className="w-[100px]">Est. Sales</div>
-                    <p>
-                      {!!claim.onChain.total && claim.onChain.cost !== 0 && (
-                        <span>
-                          {' '}
-                          ~{formatEther(claim.onChain.cost * BigInt(claim.onChain.total))}E
-                        </span>
-                      )}
-                    </p>
+      {!claims ? (
+        <div className="mx-auto my-auto flex flex-col items-center justify-center sm:max-w-lg border-dashed h-[calc(100vh-200px)] rounded-lg  text-center">
+          <p className="text-3xl font-extrabold">Claim Counter</p>
+          <p className="text-xl">Enter an address or ENS name to lookup</p>
+        </div>
+      ) : (
+        <div className="space-y-4 divide-y md:divide-y-0 md:grid md:grid-cols-2 md:gap-x-4 lg:grid-cols-3 pb-[150px]">
+          {claims?.map((claim) => (
+            <a
+              className="flex items-center gap-x-4 py-2"
+              target="_blank"
+              key={claim.instance.id}
+              href={`https://app.manifold.xyz/c/${claim.instance.slug}`}
+            >
+              <div className="flex-shrink-0">
+                <img
+                  src={claim.instance.publicData.image}
+                  className="w-24 h-24 rounded-lg object-cover"
+                />
+              </div>
+              <div>
+                <h2 className="font-semibold">{claim.instance.publicData.name}</h2>
+                {claim.error ? (
+                  <p className="text-red-500">{claim.error}</p>
+                ) : (
+                  <div className="text-sm">
+                    <div className="flex items-center gap-x-2">
+                      <div className="w-[100px]">Est. Sales</div>
+                      <p>
+                        {!!claim.onChain.total && claim.onChain.cost !== 0 && (
+                          <span>
+                            {' '}
+                            ~{formatEther(claim.onChain.cost * BigInt(claim.onChain.total))}E
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-x-2">
+                      <div className="w-[100px]">Sold</div>
+                      <p>
+                        {claim.onChain.total} /{' '}
+                        {!claim.onChain.totalMax ? <span>∞</span> : claim.onChain.totalMax}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-x-2">
-                    <div className="w-[100px]">Sold</div>
-                    <p>
-                      {claim.onChain.total} /{' '}
-                      {!claim.onChain.totalMax ? <span>∞</span> : claim.onChain.totalMax}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </a>
-        ))}
-      </div>
-
-      {claims && claims.length > 0 && (
-        <div className="fixed z-10 left-1/2 bottom-0 p-2 -translate-x-1/2 flex items-center justify-center gap-x-8 bg-zinc-50 w-full">
-          <div className="flex flex-col items-center justify-between">
-            <div>
-              Total Est. Sales:{' '}
-              <span className="font-bold">
-                {formatEther(
-                  claims
-                    ?.reduce(
-                      (acc, cur) => acc + cur.onChain.cost * BigInt(cur.onChain.total),
-                      BigInt(0)
-                    )
-                    .toString()
                 )}
-                Ξ
-              </span>
-            </div>
-          </div>
-          <div className=" flex flex-col items-center justify-between">
-            <div>
-              Tokens Sold:{' '}
-              <span className="font-bold">
-                {claims?.reduce((acc, cur) => acc + cur.onChain.total, 0).toLocaleString()}
-              </span>
-            </div>
-          </div>
+              </div>
+            </a>
+          ))}
         </div>
       )}
+
+      <div className="fixed z-10 left-1/2 bottom-0 p-2 flex flex-col items-center -translate-x-1/2 gap-x-8 w-full space-y-4 bg-zinc-50 py-4 drop-shadow-xl">
+        <form
+          className="flex items-center justify-center gap-x-2 w-full max-w-xl"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(e.currentTarget);
+          }}
+        >
+          <input
+            name="addressOrEns"
+            disabled={loading}
+            placeholder="jtgi.eth"
+            onKeyDown={(e: any) => {
+              if (e.key === 'Enter') {
+                handleSubmit(e.form);
+              }
+            }}
+            className="p-4 flex-auto border-2 border-gray-300 rounded-lg"
+          />
+          <button className="bg-zinc-700 text-white font-semibold py-4 px-6 text-center border-2 border-gray-300 rounded-lg font-mono">
+            {loading ? (
+              <LoaderIcon className="w-5 h-5 inline animate-spin" />
+            ) : (
+              <RocketIcon className="w-5 h-5 inline" />
+            )}
+          </button>
+        </form>
+
+        {claims && claims.length > 0 && (
+          <div className="flex items-center justify-center gap-x-4">
+            <div className="flex flex-col items-center justify-between">
+              <div>
+                Total Est. Sales:{' '}
+                <span className="font-bold">
+                  {formatEther(
+                    claims
+                      ?.reduce(
+                        (acc, cur) => acc + cur.onChain.cost * BigInt(cur.onChain.total),
+                        BigInt(0)
+                      )
+                      .toString()
+                  )}
+                  Ξ
+                </span>
+              </div>
+            </div>
+            <div className=" flex flex-col items-center justify-between">
+              <div>
+                Tokens Sold:{' '}
+                <span className="font-bold">
+                  {claims?.reduce((acc, cur) => acc + cur.onChain.total, 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
