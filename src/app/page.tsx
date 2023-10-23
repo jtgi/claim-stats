@@ -69,7 +69,7 @@ export default function Home() {
             console.log('Failed to get claim', e);
             setClaims((claims) => [
               ...(claims || []),
-              { onChain: null, error: e.message, instance: claim },
+              { onChain: null, error: (e as any).message, instance: claim },
             ]);
             continue;
           }
