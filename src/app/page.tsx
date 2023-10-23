@@ -171,10 +171,10 @@ export default function Home() {
         </form>
 
         {claims && claims.length > 0 && (
-          <div className="flex items-center justify-center gap-x-4">
-            <div className="flex flex-col items-center justify-between">
+          <div className="flex items-center justify-center gap-x-4 px-2">
+            <div className="text-sm flex flex-col items-center justify-between">
               <div>
-                Total Est. Sales:{' '}
+                Est. Sales:{' '}
                 <span className="font-bold">
                   {formatEther(
                     claims
@@ -188,7 +188,7 @@ export default function Home() {
                 </span>
               </div>
             </div>
-            <div className=" flex flex-col items-center justify-between">
+            <div className="text-sm flex flex-col items-center justify-between">
               <div>
                 Tokens Sold:{' '}
                 <span className="font-bold">
